@@ -1,8 +1,9 @@
 <?php
+
 /**
  * @var \CodeIgniter\Pager\PagerRenderer $pager
  */
-$pager->setSurroundCount(3); // Zobrazí 2 stránky na každé straně aktivní stránky
+$pager->setSurroundCount(3);
 ?>
 
 <nav aria-label="Page navigation example" style="margin-top: -40px;">
@@ -41,6 +42,6 @@ $pager->setSurroundCount(3); // Zobrazí 2 stránky na každé straně aktivní 
                 <span class="page-link" aria-hidden="true">&raquo;</span>
             </li>
         <?php endif ?>
-        
+
     </ul>
 </nav>
