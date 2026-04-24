@@ -8,6 +8,6 @@ class Config extends BaseConfig
 {
     public function config()
     {
-        $zkusebniint = 5;
+        $strankovani = 5;
     }
 }
