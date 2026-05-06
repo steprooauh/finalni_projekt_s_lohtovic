@@ -29,4 +29,7 @@ foreach ($zavody as $row) : ?>
     </div>
 <?php endforeach; ?>
 </div>
+<div class="row">
+    <?= $this->pager->links() ?>
+</div>
 <?= $this->endSection(); ?>
