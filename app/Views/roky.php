@@ -5,12 +5,13 @@ echo ($this->section('content'));
 <div class="p-3">
     <h1 class="text-center">Vítejte na naší stránce</h1>
     <h6 class="text-center">Autoři: Štěpán Prokop a Jiří Lhota</h6>
+
 </div>
 
 
 <div class="row">
     <?php
-    /**$var array $raceYear  */
+    /** @var array $raceYear  */
     $posledniRok = null;
     $soucet = 0;
     $prvniKolo = true;
