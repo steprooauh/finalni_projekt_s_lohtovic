@@ -11,7 +11,7 @@ echo ($this->section('content'));
 
 <div class="row">
     <?php
-    /** @var array $raceYear  */
+    /** @var array $raceYear */
     $posledniRok = null;
     $soucet = 0;
     $prvniKolo = true;

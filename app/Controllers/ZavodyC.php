@@ -18,14 +18,16 @@ class ZavodyC extends BaseController
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
     {
         parent::initController($request, $response, $logger);
+
         $this->raceYear = new RaceYear();
     }
 
-    public function index($num)
+    public function index($year)
     {
-        $zavody = $this->raceYear->where('year', $num)->findAll();
+        $zavody = $this->raceYear->select('')->where('year', $year)->join('stage', 'race_year.id = stage.id_race_year')->groupBy('race_year.id')->findAll();
 
         $data = [
+            "year" => $year,
             "zavody" => $zavody
         ];
 
