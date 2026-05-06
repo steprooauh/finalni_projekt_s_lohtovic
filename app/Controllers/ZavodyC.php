@@ -24,7 +24,7 @@ class ZavodyC extends BaseController
 
     public function index($year)
     {
-        $zavody = $this->raceYear->select('')->where('year', $year)->join('stage', 'race_year.id = stage.id_race_year')->groupBy('race_year.id')->findAll();
+        $zavody = $this->raceYear->where('race_year.year', $year)->join('stage', 'race_year.id = stage.id_race_year')->groupBy('stage.id') ->findAll();
 
         $data = [
             "year" => $year,

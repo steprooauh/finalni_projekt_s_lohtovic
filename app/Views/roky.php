@@ -22,7 +22,7 @@ echo ($this->section('content'));
             <div class="col-lg-4 col-md-6 mb-4">
                 <div class="card h-100">
                     <div class="card-header">
-                        <h2 class="text-center"><?= anchor('roky/' . $posledniRok, $posledniRok) ?></h2>
+                        <h2 class="text-center"><?= anchor('roky/' . $posledniRok, $posledniRok, ['class' => 'odkaz']) ?></h2>
                     </div>
                     <div class="card-body">
                         <p class="text-center">Počet závodů: <?= $soucet ?></p>
@@ -43,7 +43,7 @@ echo ($this->section('content'));
         <div class="col-lg-4 col-md-6 mb-4">
             <div class="card h-100">
                 <div class="card-header">
-                    <h2 class="text-center"><a class="odkaz" href="<?= base_url($posledniRok) ?>"><?= $posledniRok ?></a></h2>
+                    <h2 class="text-center"><?= anchor('roky/' . $posledniRok, $posledniRok,['class' => 'odkaz']) ?></h2>
                 </div>
                 <div class="card-body">
                     <p class="text-center">Počet závodů: <?= $soucet ?></p>
