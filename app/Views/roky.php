@@ -7,8 +7,10 @@ echo ($this->section('content'));
     <h6 class="text-center">Autoři: Štěpán Prokop a Jiří Lhota</h6>
 </div>
 
+
 <div class="row">
     <?php
+    /**$var array $raceYear  */
     $posledniRok = null;
     $soucet = 0;
     $prvniKolo = true;
@@ -19,7 +21,7 @@ echo ($this->section('content'));
             <div class="col-lg-4 col-md-6 mb-4">
                 <div class="card h-100">
                     <div class="card-header">
-                        <h2 class="text-center"><a class="odkaz" href="<?= base_url($posledniRok) ?>"><?= $posledniRok ?></a></h2>
+                        <h2 class="text-center"><?= anchor('roky/' . $posledniRok, $posledniRok) ?></h2>
                     </div>
                     <div class="card-body">
                         <p class="text-center">Počet závodů: <?= $soucet ?></p>

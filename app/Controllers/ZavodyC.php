@@ -7,8 +7,8 @@ use CodeIgniter\HTTP\ResponseInterface;
 
 class ZavodyC extends BaseController
 {
-    public function index()
+    public function index($num)
     {
-        //
+        echo view('zavody');
     }
 }
