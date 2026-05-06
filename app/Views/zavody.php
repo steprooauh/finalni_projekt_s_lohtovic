@@ -2,17 +2,19 @@
 echo($this->extend('Layout/template'));
 echo($this->section('content'));
 ?>
+<br>
+<h1 class="text-center">Přehled závodů</h1>
 
-<h1>Přehled závodů</h1>
+<a class="btn btn-secondary" style="margin-top: -100px;" href="<?= base_url() ?>"><i class="fa-solid fa-caret-left"></i>Zpět</a>
 
 <div class="row">
 <?php
 /** @var array $zavody */
 foreach ($zavody as $row) : ?>
-<div class="disabled-div col-lg-4 col-md-6 mb-4">
+<div class="col-lg-4 col-md-6 mb-4">
         <div class="card h-100">
             <div class="card-header">
-                <h4 class="text-center"><a class="odkaz" href="#"><?= $row->real_name ?></a></h4>
+            <h4 class="text-center"><?= anchor('roky/zavod/' . $row->id, $row->real_name, ['class' => 'odkaz']) ?></h4>
             </div>
             <div class="card-body">
                 <div class="row">
