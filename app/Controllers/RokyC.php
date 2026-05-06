@@ -6,27 +6,27 @@ use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
 use Psr\Log\LoggerInterface;
 
+use App\Models\RaceYear;
+
 class RokyC extends BaseController
 {
-    var $Year;
-    var $Location;
-    var $data;
+    protected $raceYear;
+
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
     {
         parent::initController($request, $response, $logger);
-        $this->Year = new \App\Models\RaceYear();
-        $this->Location = new \App\Models\Location();
 
-        $this->data = [
-
-        ];
+        $this->raceYear = new RaceYear();
     }
+
     public function index()
     {
-        $this->data +=[
-        'Year' => $this->Year->findAll(),
-        ];
-        echo view('roky', $this->data);
-    }
+        $roky = $this->raceYear->orderBy('year', 'asc')->findAll();
 
+         $data = [
+            "raceYear" => $roky
+         ];
+
+         echo view('roky', $data);
+    }
 }
