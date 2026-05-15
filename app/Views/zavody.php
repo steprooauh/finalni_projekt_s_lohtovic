@@ -17,6 +17,13 @@ foreach ($zavody as $row) : ?>
         <div class="card h-100">
             <div class="card-header">
             <h4 class="text-center"><?= anchor('roky/zavod/' . $row->id, $row->real_name, ['class' => 'odkaz']) ?></h4>
+            <?php if ($row->logo != null): ?>
+            <div class="row justify-content-center">
+                <div class="col justify-content-center d-flex mx-auto">
+            <img src="<?= base_url('img/logos/' . $row->logo) ?>" class="img-fluid w-25" alt="<?= $row->real_name ?>">
+                </div>
+            </div>
+            <?php endif; ?>
             </div>
             <div class="card-body">
                 <div class="row">
