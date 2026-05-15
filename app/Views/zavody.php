@@ -27,6 +27,11 @@ foreach ($zavody as $row) : ?>
             </div>
             <div class="card-body">
                 <div class="row">
+                    <div class="col">
+                        <span class="fi fi-<?= $row->country ?>"></span>
+                    </div>
+                </div>
+                <div class="row">
                     <div class="col-6">
                 <p class="text-center">Od: <?= $row->start_date ?></p>
                     </div>
