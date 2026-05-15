@@ -16,6 +16,7 @@ echo ($this->section('content'));
 </div>
 
 <div class="row">
+<<<<<<< HEAD
     <?php
     /** @var array $zavody 
      * @var array $year
