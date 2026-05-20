@@ -18,27 +18,32 @@ class RaceC extends BaseController
     protected $Config;
     public $rokZavodu;
 
-        #[Override]
-        public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
-        {
-             parent::initController($request, $response, $logger);
+    #[Override]
+    public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
+    {
+        parent::initController($request, $response, $logger);
 
         $this->raceYear = new RaceYear();
 
         $this->race = new Race();
 
         $this->Config = new Config();
-        $this->rokZavodu = 0;
+    }
+
+    public function show($idZavod)
+    {
+        $raceYearRow = $this->raceYear->find($idZavod);
+        $rok = 0;
+        if ($raceYearRow) {
+            $rok = is_object($raceYearRow) ? $raceYearRow->year : $raceYearRow['year'];
         }
-    public function show($idZavod){
 
         $data = [
             'idZavod' => $idZavod,
-            'year' => $this->rokZavodu,
-            'zavod' => $this->race->where('id', $idZavod)->findAll()
+            'year'    => $rok, 
+            'zavod'   => $this->race->find($idZavod)
         ];
 
         return view('race', $data);
     }
-
 }
