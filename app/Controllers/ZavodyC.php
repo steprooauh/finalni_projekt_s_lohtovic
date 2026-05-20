@@ -10,6 +10,7 @@ use CodeIgniter\HTTP\RequestInterface;
 use Psr\Log\LoggerInterface;
 use Override;
 use Config\Config;
+use App\Models\Stage;
 
 class ZavodyC extends BaseController
 {
@@ -17,6 +18,7 @@ class ZavodyC extends BaseController
     protected $race;
     protected $Config;
     public $rokZavodu;
+    protected $Stage;
 
     #[Override]
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
@@ -24,7 +26,7 @@ class ZavodyC extends BaseController
         parent::initController($request, $response, $logger);
 
         $this->raceYear = new RaceYear();
-
+        $this->Stage = new Stage();
         $this->race = new Race();
 
         $this->Config = new Config();
@@ -39,12 +41,15 @@ class ZavodyC extends BaseController
 
         $builder = $this->raceYear
             ->where('year', $year);
+        
+        $stage = $this->Stage->join('stage.id_race_year = race_year.id')->join('race_year.id_race = race.id')->where('race_year.year', $year)->findAll();
 
         if ($jenMoje && session()->get('user_id')) {
             $builder->where('vytvoril_uzivatel_id', session()->get('user_id'));
         }
 
         $data = [
+            'stage'   => $stage,
             'year'    => $year,
             'zavody'  => $builder->paginate($this->Config->strankovani),
             'pager'   => $this->raceYear->pager,
