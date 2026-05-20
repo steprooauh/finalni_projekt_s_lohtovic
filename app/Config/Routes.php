@@ -8,4 +8,4 @@ use CodeIgniter\Router\RouteCollection;
 $routes->get('/', 'RokyC::index');
 $routes->get('/roky/(:num)', 'ZavodyC::index/$1');
 $routes->post('/zavody/pridat', 'ZavodyC::add');
-$routes->get('/roky/zavod/(:num)', 'ZavodyC::show/$1');
+$routes->get('/roky/zavod/(:num)', 'RaceC::show/$1');
