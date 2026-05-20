@@ -54,17 +54,6 @@ class ZavodyC extends BaseController
         return view('zavody', $data);
     }
 
-    public function show($idZavod)
-    {
-        $data = [
-            'idZavod' => $idZavod,
-            'year'    => $this->rokZavodu,
-            'zavod'   => $this->race->find($idZavod)
-        ];
-
-        return view('race', $data);
-    }
-
     public function add()
     {
         if ($this->request->is('post')) {
