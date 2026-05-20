@@ -36,6 +36,29 @@ echo ($this->section('content'));
                         <div class="col-6">
                             <p class="text-center">Do: <?= $row->end_date ?></p>
                         </div>
+=======
+<?php
+/** @var array $zavody 
+ * @var object $pager
+*/
+foreach ($zavody as $row) : ?>
+<div class="col-lg-4 col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+            <h4 class="text-center"><?= anchor('roky/zavod/' . $row->id, $row->real_name, ['class' => 'odkaz']) ?></h4>
+            <?php if ($row->logo != null): ?>
+            <div class="row justify-content-center">
+                <div class="col justify-content-center d-flex mx-auto">
+            <img src="<?= base_url('img/logos/' . $row->logo) ?>" class="img-fluid w-25" alt="<?= $row->real_name ?>">
+                </div>
+            </div>
+            <?php endif; ?>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6">
+                <p class="text-center">Od: <?= $row->start_date ?></p>
+>>>>>>> ceb95d6a6c617b72bf5681b3e81fa3718f0c6d29
                     </div>
                 </div>
             </div>
