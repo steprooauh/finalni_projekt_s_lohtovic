@@ -50,6 +50,11 @@
                         </div>
 
                         <div class="row g-0 bg-light rounded p-2 text-muted small mt-auto">
+                            <?php if ($row->start_date == $row->end_date) : ?>
+                            <div class="col-12">
+                                <span class="d-block text-uppercase text-xs fw-semibold" style="color: black; ">Datum</span>
+                                <span class="text-dark fw-medium"><?= date('d. m. Y', strtotime($row->start_date)) ?></span>
+                            </div> <?php else : ?>
                             <div class="col-6 border-end">
                                 <span class="d-block text-uppercase text-xs fw-semibold" style="color: black; ">Od</span>
                                 <span class="text-dark fw-medium"><?= !empty($row->start_date) ? date('d. m. Y', strtotime($row->start_date)) : '' ?></span>
@@ -57,14 +62,14 @@
                             <div class="col-6">
                                 <span class="d-block text-uppercase text-xs fw-semibold" style="color: black; ">Do</span>
                                 <span class="text-dark fw-medium"><?= !empty($row->end_date) ? date('d. m. Y', strtotime($row->end_date)) : '' ?></span>
-                            </div>
+                            </div> <?php endif; ?>
+
                         </div>
                     </div>
                 </div>
             </div>
         <?php endforeach; ?>
     </div>
-
     <div class="row mt-3">
         <?= $pager->links() ?>
     </div>
@@ -92,11 +97,12 @@
                 </ul>
 
                 <div class="tab-content border-start border-end border-bottom p-3" id="myTabContent">
-                    <div class="tab-pane fade show active" id="pridat-pane" role="tabpanel" aria-labelledby="pridat-tab">
+                    <div class="tab-pane fade show active form-floating" id="pridat-pane" role="tabpanel" aria-labelledby="pridat-tab">
                         <?php echo form_open_multipart('zavody/pridat');
                         echo form_input_bs('nazev', ['id' => 'nazev_add', 'value' => ''], 'Název závodu:', 'text', false);
                         ?>
                         <input type="hidden" name="id_rocniku" id="id_rocniku_add" value="">
+                        
 
                         <?php
                         $roky = [];

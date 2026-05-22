@@ -42,7 +42,7 @@ class ZavodyC extends BaseController
         $builder = $this->raceYear
             ->where('year', $year);
         
-        $stage = $this->Stage->join('stage.id_race_year = race_year.id')->join('race_year.id_race = race.id')->where('race_year.year', $year)->findAll();
+        $stage = $this->Stage->join('race_year', 'stage.id_race_year = race_year.id')->join('race', 'race.id = race_year.id_race')->where('race_year.year', $year)->findAll();
 
         if ($jenMoje && session()->get('user_id')) {
             $builder->where('vytvoril_uzivatel_id', session()->get('user_id'));
