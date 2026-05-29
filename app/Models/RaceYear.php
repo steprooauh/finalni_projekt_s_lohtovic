@@ -10,7 +10,7 @@ class RaceYear extends Model
     protected $primaryKey       = 'id';
     protected $useAutoIncrement = true;
     protected $returnType       = 'object';
-    protected $useSoftDeletes   = false;
+    protected $useSoftDeletes   = true;
     protected $protectFields    = true;
     protected $allowedFields    = ['real_name', 'year', 'id_race', 'uci_tour', 'vytvoril_uzivatel_id'];
 
