@@ -31,6 +31,9 @@
          * @var object $pager
          * @var array $year
          * @var array $uci_moznosti
+         * @var object $stage
+         * @var int $distance
+         * @var int $elevation
          */
         foreach ($zavody as $row) : ?>
             <div class="col-lg-4 col-md-6 mb-4">
@@ -56,13 +59,23 @@
                             <div class="div row"> <!-- vzelanost -->
                                 <div class="col">
                                     <span class="d-block text-uppercase text-xs fw-semibold" style="color: black; ">Délka závodu</span>
-                                    <span class="text-dark fw-medium" style="color: black; "><?= $distance ?> km</span>
+                                    <span class="text-dark fw-medium" style="color: black; ">
+                                        <?php $stage = new \App\Models\Stage();
+                                        $distance = $stage->join('race_year', 'stage.id_race_year = race_year.id')
+                                        ->join('race', 'race.id = race_year.id_race')->where('race_year.id', $row->id)
+                                        ->where('race_year.year', $year)->selectSum('distance')->get()->getRow()->distance;?>
+                                        <?=  $distance ?> km</span>
                                 </div>
                             </div>
                             <div class="div row"> <!-- previskani -->
                                 <div class="col">
                                     <span class="d-block text-uppercase text-xs fw-semibold" style="color: black; ">Převýšení</span>
-                                    <span class="text-dark fw-medium" style="color: black; ">text</span>
+                                    <span class="text-dark fw-medium" style="color: black; ">
+                                        <?php $stage = new \App\Models\Stage();
+                                        $elevation = $stage->join('race_year', 'stage.id_race_year = race_year.id')
+                                        ->join('race', 'race.id = race_year.id_race')->where('race_year.id', $row->id)
+                                        ->where('race_year.year', $year)->selectSum('vertical_meters', 'elevation')->get()->getRow()->elevation;?>
+                                        <?=  $elevation ?> m</span>
                                 </div>
                             </div>
                             
