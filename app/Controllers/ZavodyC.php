@@ -46,11 +46,11 @@ class ZavodyC extends BaseController
             ->where('race_year.year', $year)
             ->findAll();
 
-        if ($jenMoje && session()->get('user_id')) {
-            $builder->where('vytvoril_uzivatel_id', session()->get('user_id'));
+        // OPRAVA FILTRU: Pokud je zaškrtnuto "Moje", filtrujeme hodnotu 1 v DB
+        if ($jenMoje) {
+            $builder->where('vytvoril_uzivatel_id', 1);
         }
 
-        // Definice možností UCI Tour, které se předají do pohledu
         $uci_moznosti = [
             '0'  => 'Není v UCI',
             '1'  => 'UCI Worldtour',
@@ -72,11 +72,11 @@ class ZavodyC extends BaseController
         $data = [
             'stage'          => $stage,
             'year'           => $year,
-            'zavody'         => $builder->paginate($this->Config->strankovani), // Stránkované pro výpis karet
-            'vsechny_zavody' => $this->raceYear->where('year', $year)->findAll(), // Kompletní seznam pro našeptávač v modalu
+            'zavody'         => $builder->paginate($this->Config->strankovani),
+            'vsechny_zavody' => $this->raceYear->where('year', $year)->findAll(),
             'pager'          => $this->raceYear->pager,
             'jenMoje'        => $jenMoje,
-            'uci_moznosti'   => $uci_moznosti // Nově předávané pole
+            'uci_moznosti'   => $uci_moznosti
         ];
 
         return view('zavody', $data);
@@ -97,26 +97,31 @@ class ZavodyC extends BaseController
                 return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
             }
 
-            $img = $this->request->getFile('logo');
-            $logoName = '';
-
-            if ($img->isValid() && ! $img->hasMoved()) {
-                $logoName = $img->getRandomName();
-                $img->move(ROOTPATH . 'public/uploads/logos', $logoName);
-            }
-
             $insertData = [
-                'real_name'                 => $this->request->getPost('nazev'),
-                'year'                  => $this->request->getPost('rok'),
-                'id_uci_tour'           => $this->request->getPost('id_uci_tour'),
-                'id_rocniku'            => $this->request->getPost('id_rocniku'),
-                'logo'                  => $logoName,
-                'vytvoril_uzivatel_id'  => session()->get('user_id'),
+                'real_name'            => $this->request->getPost('nazev'),
+                'year'                 => $this->request->getPost('rok'),
+                'id_uci_tour'          => $this->request->getPost('id_uci_tour'),
+                'id_rocniku'           => $this->request->getPost('id_rocniku'),
+                'logo'                 => '',
+                'vytvoril_uzivatel_id' => 1, // Automaticky dáváme 1 (vytvořeno uživatelem)
             ];
 
             if ($this->raceYear->insert($insertData)) {
+                $newId = $this->raceYear->getInsertID();
+                $img = $this->request->getFile('logo');
+
+                if ($img && $img->isValid() && ! $img->hasMoved()) {
+                    $extension = $img->getClientExtension();
+                    $logoName = 'logo-' . $newId . '.' . $extension;
+                    $uploadPath = FCPATH . 'img/logos/';
+
+                    if ($img->move($uploadPath, $logoName)) {
+                        $this->raceYear->update($newId, ['logo' => $logoName]);
+                    }
+                }
+
                 $rok = $this->request->getPost('rok');
-                return redirect()->to(base_url("zavody/{$rok}"))->with('success', 'Závod byl úspěšně přidán.');
+                return redirect()->to(base_url("index.php/zavody/{$rok}"))->with('success', 'Závod byl úspěšně přidán.');
             } else {
                 return redirect()->back()->withInput()->with('error', 'Nepodařilo se uložit závod.');
             }
@@ -127,7 +132,7 @@ class ZavodyC extends BaseController
 
     public function change()
     {
-        if ($this->request->getMethod() !== 'post') {
+        if (! $this->request->is('post')) {
             return redirect()->back()->with('error', 'Neoprávněný přístup.');
         }
 
@@ -143,27 +148,28 @@ class ZavodyC extends BaseController
         }
 
         $updateData = [
-            'real_name'       => $this->request->getPost('nazev'),
+            'real_name'   => $this->request->getPost('nazev'),
             'id_uci_tour' => $this->request->getPost('uci_tour'),
         ];
 
         $file = $this->request->getFile('logo');
 
+        // Opravená podmínka a validace pro nahrávání souborů v CI4
         if ($file && $file->isValid() && !$file->hasMoved()) {
-
             $rules = [
-                'logo' => 'max_size[logo,2048]|mime_in[logo,image/jpg,image/jpeg,image/png]'
+                'logo' => 'max_size[logo,2048]|ext_in[logo,jpg,jpeg,png]'
             ];
 
             if ($this->validate($rules)) {
-                $newName = $file->getRandomName();
-                $uploadPath = FCPATH . 'uploads/logos/';
+                $extension = $file->getClientExtension();
+                $newName = 'logo-' . $id . '.' . $extension;
+                $uploadPath = FCPATH . 'img/logos/';
+
+                if (!empty($zavod->logo) && $zavod->logo !== $newName && file_exists($uploadPath . $zavod->logo)) {
+                    unlink($uploadPath . $zavod->logo);
+                }
 
                 if ($file->move($uploadPath, $newName)) {
-                    if (!empty($zavod->logo) && file_exists($uploadPath . $zavod->logo)) {
-                        unlink($uploadPath . $zavod->logo);
-                    }
-
                     $updateData['logo'] = $newName;
                 }
             } else {
@@ -180,26 +186,25 @@ class ZavodyC extends BaseController
 
     public function delete()
     {
-        // Změna kontroly na 'post' namísto 'delete'
-        if ($this->request->getMethod() !== 'post') {
+        if (! $this->request->is('post')) {
             return redirect()->back()->with('error', 'Neoprávněný přístup.');
         }
 
-        // Načtení ID (teď už v něm stoprocentně bude hodnota)
         $id = $this->request->getPost('id');
 
         if (empty($id)) {
             return redirect()->back()->with('error', 'Nebylo zadáno ID závodu ke smazání.');
         }
 
-        $zavodyModel = model('ZavodModel'); // Uprav podle názvu svého modelu
-
+        // POZOR: Tady máš model 'ZavodModel', ujisti se, že pod tímto názvem je v DB soft-delete, 
+        // jinak použij přímo $this->raceYear->delete($id);
+        $zavodyModel = model('ZavodModel');
         $zavod = $zavodyModel->find($id);
+
         if (!$zavod) {
             return redirect()->back()->with('error', 'Závod nebyl nalezen.');
         }
 
-        // Volání delete() spustí Soft Delete, pokud máš v modelu $useSoftDeletes = true;
         if ($zavodyModel->delete($id)) {
             return redirect()->back()->with('success', 'Závod byl úspěšně skryt z přehledu.');
         } else {
