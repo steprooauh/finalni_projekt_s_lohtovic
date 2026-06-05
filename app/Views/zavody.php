@@ -91,19 +91,38 @@
                                         </span>
                                     </div>
                                 </div>
-                                <?php $stage = new \App\Models\Stage();
-                                $elevation = $stage->join('race_year', 'stage.id_race_year = race_year.id')
-                                    ->join('race', 'race.id = race_year.id_race')->where('race_year.id', $row->id)
-                                    ->where('race_year.year', $year)->selectSum('vertical_meters', 'elevation')->get()->getRow()->elevation;
-                                if ($elevation > 0) : ?>
-                                    <div class="div row mb-2"> <!-- previskani -->
-                                        <div class="col">
-                                            <span class="d-block text-uppercase text-xs fw-semibold" style="color: black; ">Převýšení</span>
-                                            <span class="text-success-emphasis fw-medium" style="color: black; ">
-                                                <?= $elevation; ?> m</span>
-                                        </div>
+                                <div class="div row mb-2">
+                                    <div class="col">
+                                        <span class="d-block text-uppercase text-xs fw-semibold" style="color: black;">Převýšení</span>
+                                        <span class="text-success-emphasis fw-medium" style="color: black;">
+                                            <?php
+                                            // 1. Zkusíme vzít hodnotu přímo z řádku závodu
+                                            if (isset($row->total_elevation) && $row->total_elevation > 0) {
+                                                echo $row->total_elevation . ' m';
+                                            } else {
+                                                // 2. Záložní výpočet sumy z etap, pokud v hlavním sloupci nic není
+                                                $stageModel = new \App\Models\Stage();
+                                                $elevationData = $stageModel->join('race_year', 'stage.id_race_year = race_year.id')
+                                                    ->join('race', 'race.id = race_year.id_race')
+                                                    ->where('race_year.id', $row->id)
+                                                    ->where('race_year.year', $year) // Pozor: ujisti se, že proměnná $year je v cyklu dostupná a správná
+                                                    ->selectSum('vertical_meters', 'elevation')
+                                                    ->get()
+                                                    ->getRow();
+
+                                                $elevation = $elevationData ? $elevationData->elevation : 0;
+
+                                                // 3. Pokud je suma z etap větší než 0, vypíšeme ji, jinak dáme pomlčku
+                                                if ($elevation > 0) {
+                                                    echo $elevation . ' m';
+                                                } else {
+                                                    echo '-'; // Nebo '0 m', podle toho, co preferuješ
+                                                }
+                                            }
+                                            ?>
+                                        </span>
                                     </div>
-                                <?php endif; ?>
+                                </div>
                                 <div class="div row">
                                     <?php if ($row->start_date == $row->end_date) : ?>
                                         <div class="col-12">
