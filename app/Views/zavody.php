@@ -75,8 +75,8 @@
                                         <span class="text-success-emphasis fw-medium" style="color: black; ">
                                             <?php $race_year = new \App\Models\RaceYear();
                                             $uci_tour_id = $race_year->where('id', $row->id)->select('uci_tour')->get()->getRow()->uci_tour;
-                                            echo $uci_moznosti[$uci_tour_id] ?? 'Nezařazeno';   
-                                         ?></span>
+                                            echo $uci_moznosti[$uci_tour_id] ?? 'Nezařazeno';
+                                            ?></span>
                                     </div>
                                 </div>
                                 <div class="div row mb-2"> <!-- vzelanost -->
@@ -85,16 +85,16 @@
                                         <span class="text-success-emphasis fw-medium" style="color: black; ">
                                             <?php $stage = new \App\Models\Stage();
                                             $distance = $stage->join('race_year', 'stage.id_race_year = race_year.id')
-                                            ->join('race', 'race.id = race_year.id_race')->where('race_year.id', $row->id)
-                                            ->where('race_year.year', $year)->selectSum('distance')->get()->getRow()->distance; 
+                                                ->join('race', 'race.id = race_year.id_race')->where('race_year.id', $row->id)
+                                                ->where('race_year.year', $year)->selectSum('distance')->get()->getRow()->distance;
                                             echo $distance; ?> km
                                         </span>
                                     </div>
                                 </div>
                                 <?php $stage = new \App\Models\Stage();
-                                    $elevation = $stage->join('race_year', 'stage.id_race_year = race_year.id')
+                                $elevation = $stage->join('race_year', 'stage.id_race_year = race_year.id')
                                     ->join('race', 'race.id = race_year.id_race')->where('race_year.id', $row->id)
-                                    ->where('race_year.year', $year)->selectSum('vertical_meters', 'elevation')->get()->getRow()->elevation; 
+                                    ->where('race_year.year', $year)->selectSum('vertical_meters', 'elevation')->get()->getRow()->elevation;
                                 if ($elevation > 0) : ?>
                                     <div class="div row mb-2"> <!-- previskani -->
                                         <div class="col">
@@ -106,18 +106,18 @@
                                 <?php endif; ?>
                                 <div class="div row">
                                     <?php if ($row->start_date == $row->end_date) : ?>
-                                    <div class="col-12">
-                                        <span class="d-block text-uppercase text-xs fw-semibold" style="color: black; ">Datum</span>
-                                        <span class="text-success-emphasis fw-medium"><?= date('d. m. Y', strtotime($row->start_date)) ?></span>
-                                    </div> <?php else : ?>
-                                    <div class="col-6 border-end">
-                                        <span class="d-block text-uppercase text-xs fw-semibold" style="color: black; ">Od</span>
-                                        <span class="text-success-emphasis fw-medium"><?= !empty($row->start_date) ? date('d. m. Y', strtotime($row->start_date)) : '' ?></span>
-                                    </div>
-                                    <div class="col-6">
-                                        <span class="d-block text-uppercase text-xs fw-semibold" style="color: black; ">Do</span>
-                                        <span class="text-success-emphasis fw-medium"><?= !empty($row->end_date) ? date('d. m. Y', strtotime($row->end_date)) : '' ?></span>
-                                    </div> <?php endif; ?>
+                                        <div class="col-12">
+                                            <span class="d-block text-uppercase text-xs fw-semibold" style="color: black; ">Datum</span>
+                                            <span class="text-success-emphasis fw-medium"><?= date('d. m. Y', strtotime($row->start_date)) ?></span>
+                                        </div> <?php else : ?>
+                                        <div class="col-6 border-end">
+                                            <span class="d-block text-uppercase text-xs fw-semibold" style="color: black; ">Od</span>
+                                            <span class="text-success-emphasis fw-medium"><?= !empty($row->start_date) ? date('d. m. Y', strtotime($row->start_date)) : '' ?></span>
+                                        </div>
+                                        <div class="col-6">
+                                            <span class="d-block text-uppercase text-xs fw-semibold" style="color: black; ">Do</span>
+                                            <span class="text-success-emphasis fw-medium"><?= !empty($row->end_date) ? date('d. m. Y', strtotime($row->end_date)) : '' ?></span>
+                                        </div> <?php endif; ?>
                                 </div>
                             </div>
                         </div>
@@ -166,13 +166,13 @@
                                 <div class="col-6">
                                     <div class="form-floating mb-3">
                                         <input type="number" step="0.1" name="total_distance" id="distance_add" class="form-control" placeholder="Délka (km)" required>
-                                        <label for="distance_add">Celková délka (km):</label>
+                                        <label for="distance_add">Délka (km):</label>
                                     </div>
                                 </div>
                                 <div class="col-6">
                                     <div class="form-floating mb-3">
                                         <input type="number" name="total_elevation" id="elevation_add" class="form-control" placeholder="Převýšení (m)" required>
-                                        <label for="elevation_add">Celkové převýšení (m):</label>
+                                        <label for="elevation_add">Převýšení (m):</label>
                                     </div>
                                 </div>
                             </div>
@@ -294,83 +294,53 @@
 <script src="<?= base_url('node_modules/tinymce/tinymce.min.js') ?>" referrerpolicy="origin"></script>
 
 <script>
-document.addEventListener("DOMContentLoaded", function() {
+    < script src = "<?= base_url('node_modules/tom-select/dist/js/tom-select.base.js') ?>" >
+</script>
 
-    // TinyMCE v modalu
-    const pridatModal = document.getElementById('pridat');
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
 
-    if (pridatModal) {
-        pridatModal.addEventListener('shown.bs.modal', function () {
+        // --- NAŠEPTÁVAČ PRO EDITACI ---
+        const searchInput = document.getElementById('zavod_search_input');
+        const datalist = document.getElementById('zavody_datalist');
+        const hiddenIdInput = document.getElementById('zavod_id_hidden');
+        const editWrapper = document.getElementById('edit_fields_wrapper');
+        const editNazevField = document.getElementById('nazev_edit');
 
-            if (!tinymce.get('bio_add')) {
-                tinymce.init({
-                    selector: '#bio_add',
-                    height: 300,
-                    menubar: false,
-                    plugins: [
-                        'lists',
-                        'link',
-                        'table',
-                        'code'
-                    ],
-                    toolbar: 'undo redo | bold italic underline | bullist numlist | link table | code'
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                const inputValue = this.value;
+                const options = datalist.querySelectorAll('option');
+                let foundId = null;
+                let foundUci = '0';
+
+                options.forEach(option => {
+                    if (option.value === inputValue) {
+                        foundId = option.getAttribute('data-id');
+                        foundUci = option.getAttribute('data-uci') || '0';
+                    }
                 });
-            }
 
-        });
+                if (foundId) {
+                    hiddenIdInput.value = foundId;
+                    editNazevField.value = inputValue;
+                    document.getElementById('uci_tour_edit').value = foundUci;
 
-        pridatModal.addEventListener('hidden.bs.modal', function () {
+                    document.getElementById('nazev_edit').removeAttribute('disabled');
+                    document.getElementById('uci_tour_edit').removeAttribute('disabled');
+                    document.getElementById('logo_edit').removeAttribute('disabled');
 
-            const editor = tinymce.get('bio_add');
+                    editWrapper.classList.remove('d-none');
+                } else {
+                    hiddenIdInput.value = "";
+                    document.getElementById('nazev_edit').setAttribute('disabled', 'disabled');
+                    document.getElementById('uci_tour_edit').setAttribute('disabled', 'disabled');
+                    document.getElementById('logo_edit').setAttribute('disabled', 'disabled');
 
-            if (editor) {
-                editor.remove();
-            }
-
-        });
-    }
-
-    // --- NAŠEPTÁVAČ PRO EDITACI ---
-    const searchInput = document.getElementById('zavod_search_input');
-    const datalist = document.getElementById('zavody_datalist');
-    const hiddenIdInput = document.getElementById('zavod_id_hidden');
-    const editWrapper = document.getElementById('edit_fields_wrapper');
-    const editNazevField = document.getElementById('nazev_edit');
-
-    if (searchInput) {
-        searchInput.addEventListener('input', function() {
-            const inputValue = this.value;
-            const options = datalist.querySelectorAll('option');
-            let foundId = null;
-            let foundUci = '0';
-
-            options.forEach(option => {
-                if (option.value === inputValue) {
-                    foundId = option.getAttribute('data-id');
-                    foundUci = option.getAttribute('data-uci') || '0';
+                    editWrapper.classList.add('d-none');
                 }
             });
-
-            if (foundId) {
-                hiddenIdInput.value = foundId;
-                editNazevField.value = inputValue;
-                document.getElementById('uci_tour_edit').value = foundUci;
-
-                document.getElementById('nazev_edit').removeAttribute('disabled');
-                document.getElementById('uci_tour_edit').removeAttribute('disabled');
-                document.getElementById('logo_edit').removeAttribute('disabled');
-
-                editWrapper.classList.remove('d-none');
-            } else {
-                hiddenIdInput.value = "";
-                document.getElementById('nazev_edit').setAttribute('disabled', 'disabled');
-                document.getElementById('uci_tour_edit').setAttribute('disabled', 'disabled');
-                document.getElementById('logo_edit').setAttribute('disabled', 'disabled');
-
-                editWrapper.classList.add('d-none');
-            }
-        });
-    }
+        }
 
         // --- NAŠEPTÁVAČ PRO MAZÁNÍ ---
         const deleteInput = document.getElementById('zavod_delete_input');
@@ -450,7 +420,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 window.location.href = currentUrl.toString();
             });
         }
+    });
 </script>
-   <script src="<?= base_url('node_modules/tinymce/tinymce.min.js') ?>" referrerpolicy="origin"></script>
 
 <?= $this->endSection() ?>

@@ -34,10 +34,8 @@
 
     <?php if ($zavod->start_date == $zavod->end_date) : ?>
       <div class="col-12 mb-2">
-        <span class="d-block text-uppercase text-xs fw-semibold">Datum</span>
-        <span class="fw-medium">
-          <?= !empty($zavod->start_date) ? date('d. m. Y', strtotime($zavod->start_date)) : '-' ?>
-        </span>
+        <span class="d-block text-uppercase text-xs fw-semibold">Datum: <?= !empty($zavod->start_date) ? date('d. m. Y', strtotime($zavod->start_date)) : '-' ?></span>
+        
       </div>
     <?php else : ?>
       <div class="row">
