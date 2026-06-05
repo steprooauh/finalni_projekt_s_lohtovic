@@ -48,20 +48,13 @@
          * @var int $elevation
          */
         foreach ($zavody as $row) : ?>
-            <div class="col-lg-4 col-md-6 mb-4">
+            <div class="col-lg-4 col-md-6 mb-3">
                 <div class="card h-100 shadow-sm border-0">
-                    <div class="card-header d-flex flex-column justify-content-center align-items-center border-bottom-0 py-3" style="height: 140px;">
-                        <h5 class="text-center mb-2 fw-bold">
+                    <div class="card-header d-flex flex-column justify-content-center align-items-center border-bottom-0 mt-2">
+                        <h5 class="text-center fw-bold">
                             <?= anchor('index.php/race/show/' . $row->id, $row->real_name, ['class' => 'text-decoration-none text-dark hover-primary']) ?>
                         </h5>
-
-                        <div class="d-flex align-items-center justify-content-center" style="height: 50px;">
-                            <?php if (!empty($row->logo)): ?>
-                                <img src="<?= base_url('img/logos/' . $row->logo) ?>" class="img-fluid" style="max-height: 50px; width: auto;">
-                            <?php endif; ?>
-                        </div>
                     </div>
-
                     <div class="card-body d-flex flex-column justify-content-between text-center">
                         <div class="mb-1">
                             <span class="fi fi-<?= $row->country ?> fs-4 shadow-sm rounded-1"></span>
