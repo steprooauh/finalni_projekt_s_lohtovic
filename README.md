@@ -435,6 +435,6 @@ php spark serve
 
 ---
 
-## 📄 Licence
+## Licence
 
 Projekt byl vytvořen pro studijní účely.
