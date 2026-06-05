@@ -203,7 +203,7 @@
 
                             <div class="mb-3">
                                 <label for="bio_add" class="form-label fw-semibold text-xs text-uppercase">Informace o závodu (Bio):</label>
-                                <textarea name="bio" id="bio_add" class="form-control summernote"></textarea>
+                                <textarea name="bio" id="bio_add" class="form-control"></textarea>
                             </div>
 
                             <div class="modal-footer px-0 pb-0 mt-3">
@@ -291,82 +291,86 @@
 
 <div id="delete_modal_container"></div>
 
-<script src="<?= base_url('node_modules/tom-select/dist/js/tom-select.base.js') ?>"></script>
+<script src="<?= base_url('node_modules/tinymce/tinymce.min.js') ?>" referrerpolicy="origin"></script>
 
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
-    
-    // Najdeme naše modální okno s formulářem
+document.addEventListener("DOMContentLoaded", function() {
+
+    // TinyMCE v modalu
     const pridatModal = document.getElementById('pridat');
-    
+
     if (pridatModal) {
-        // Jakmile se modál plně zobrazí, aktivujeme editor
         pridatModal.addEventListener('shown.bs.modal', function () {
-            $('.summernote').summernote({
-                placeholder: 'Zde napište podrobnosti o závodu...',
-                tabsize: 2,
-                height: 200,
-                lang: 'cs-CZ', // pokud chceš češtinu (vyžadovalo by další script, raději necháme default)
-                toolbar: [
-                    ['style', ['style']],
-                    ['font', ['bold', 'underline', 'clear']],
-                    ['color', ['color']],
-                    ['para', ['ul', 'ol', 'paragraph']],
-                    ['table', ['table']],
-                    ['view', ['codeview']]
-                ]
-            });
+
+            if (!tinymce.get('bio_add')) {
+                tinymce.init({
+                    selector: '#bio_add',
+                    height: 300,
+                    menubar: false,
+                    plugins: [
+                        'lists',
+                        'link',
+                        'table',
+                        'code'
+                    ],
+                    toolbar: 'undo redo | bold italic underline | bullist numlist | link table | code'
+                });
+            }
+
         });
 
-        // Jakmile se modál zavře, editor zničíme, aby se při příštím otevření nezasekl
         pridatModal.addEventListener('hidden.bs.modal', function () {
-            $('.summernote').summernote('destroy');
+
+            const editor = tinymce.get('bio_add');
+
+            if (editor) {
+                editor.remove();
+            }
+
         });
     }
 
-});
+    // --- NAŠEPTÁVAČ PRO EDITACI ---
+    const searchInput = document.getElementById('zavod_search_input');
+    const datalist = document.getElementById('zavody_datalist');
+    const hiddenIdInput = document.getElementById('zavod_id_hidden');
+    const editWrapper = document.getElementById('edit_fields_wrapper');
+    const editNazevField = document.getElementById('nazev_edit');
 
-        // --- NAŠEPTÁVAČ PRO EDITACI ---
-        const searchInput = document.getElementById('zavod_search_input');
-        const datalist = document.getElementById('zavody_datalist');
-        const hiddenIdInput = document.getElementById('zavod_id_hidden');
-        const editWrapper = document.getElementById('edit_fields_wrapper');
-        const editNazevField = document.getElementById('nazev_edit');
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            const inputValue = this.value;
+            const options = datalist.querySelectorAll('option');
+            let foundId = null;
+            let foundUci = '0';
 
-        if (searchInput) {
-            searchInput.addEventListener('input', function() {
-                const inputValue = this.value;
-                const options = datalist.querySelectorAll('option');
-                let foundId = null;
-                let foundUci = '0';
-
-                options.forEach(option => {
-                    if (option.value === inputValue) {
-                        foundId = option.getAttribute('data-id');
-                        foundUci = option.getAttribute('data-uci') || '0';
-                    }
-                });
-
-                if (foundId) {
-                    hiddenIdInput.value = foundId;
-                    editNazevField.value = inputValue;
-                    document.getElementById('uci_tour_edit').value = foundUci;
-
-                    document.getElementById('nazev_edit').removeAttribute('disabled');
-                    document.getElementById('uci_tour_edit').removeAttribute('disabled');
-                    document.getElementById('logo_edit').removeAttribute('disabled');
-
-                    editWrapper.classList.remove('d-none');
-                } else {
-                    hiddenIdInput.value = "";
-                    document.getElementById('nazev_edit').setAttribute('disabled', 'disabled');
-                    document.getElementById('uci_tour_edit').setAttribute('disabled', 'disabled');
-                    document.getElementById('logo_edit').setAttribute('disabled', 'disabled');
-
-                    editWrapper.classList.add('d-none');
+            options.forEach(option => {
+                if (option.value === inputValue) {
+                    foundId = option.getAttribute('data-id');
+                    foundUci = option.getAttribute('data-uci') || '0';
                 }
             });
-        }
+
+            if (foundId) {
+                hiddenIdInput.value = foundId;
+                editNazevField.value = inputValue;
+                document.getElementById('uci_tour_edit').value = foundUci;
+
+                document.getElementById('nazev_edit').removeAttribute('disabled');
+                document.getElementById('uci_tour_edit').removeAttribute('disabled');
+                document.getElementById('logo_edit').removeAttribute('disabled');
+
+                editWrapper.classList.remove('d-none');
+            } else {
+                hiddenIdInput.value = "";
+                document.getElementById('nazev_edit').setAttribute('disabled', 'disabled');
+                document.getElementById('uci_tour_edit').setAttribute('disabled', 'disabled');
+                document.getElementById('logo_edit').setAttribute('disabled', 'disabled');
+
+                editWrapper.classList.add('d-none');
+            }
+        });
+    }
 
         // --- NAŠEPTÁVAČ PRO MAZÁNÍ ---
         const deleteInput = document.getElementById('zavod_delete_input');
@@ -446,10 +450,7 @@
                 window.location.href = currentUrl.toString();
             });
         }
-    });
-
-    <
-    script src = "<?= base_url('node_modules/tinymce/tinymce.min.js'); ?>"
-    referrerpolicy = "origin" >
 </script>
+   <script src="<?= base_url('node_modules/tinymce/tinymce.min.js') ?>" referrerpolicy="origin"></script>
+
 <?= $this->endSection() ?>
