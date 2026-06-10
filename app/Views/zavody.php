@@ -4,7 +4,7 @@
     <div class="container py-4">
         <h1 class="text-center mb-4">Přehled závodů</h1>
 
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex justify-content-center align-items-center gap-3 mb-4">
             <a class="btn btn-secondary" href="<?= base_url() ?>">
                 <i class="fa-solid fa-caret-left"></i> Zpět
             </a>
@@ -28,7 +28,7 @@
             <div class="alert alert-danger">
                 <ul>
                     <?php foreach (session()->getFlashdata('errors') as $error): ?>
-                        <li><?= esc($error) ?></li>
+                        <li><?= $error ?></li>
                     <?php endforeach; ?>
                 </ul>
             </div>
@@ -72,44 +72,59 @@
                                                 ?></span>
                                         </div>
                                     </div>
-                                    <div class="div row mb-2"> <!-- vzelanost -->
+                                    <div class="div row mb-2">
                                         <div class="col">
-                                            <span class="d-block text-uppercase text-xs fw-semibold" style="color: black; ">Délka závodu</span>
-                                            <span class="text-success-emphasis fw-medium" style="color: black; ">
-                                                <?php $stage = new \App\Models\Stage();
-                                                $distance = $stage->join('race_year', 'stage.id_race_year = race_year.id')
-                                                    ->join('race', 'race.id = race_year.id_race')->where('race_year.id', $row->id)
-                                                    ->where('race_year.year', $year)->selectSum('distance')->get()->getRow()->distance;
-                                                echo $distance; ?> km
+                                            <span class="d-block text-uppercase text-xs fw-semibold" style="color: black;">Délka závodu</span>
+                                            <span class="text-success-emphasis fw-medium" style="color: black;">
+                                                <?php
+                                                if (isset($row->total_distance) && $row->total_distance > 0) {
+                                                    echo $row->total_distance . ' km';
+                                                } else {
+                                                    $stageModel = new \App\Models\Stage();
+                                                    $distanceData = $stageModel->join('race_year', 'stage.id_race_year = race_year.id')
+                                                        ->join('race', 'race.id = race_year.id_race')
+                                                        ->where('race_year.id', $row->id)
+                                                        ->where('race_year.year', $year)
+                                                        ->selectSum('distance')
+                                                        ->get()
+                                                        ->getRow();
+
+                                                    $distance = $distanceData ? $distanceData->distance : 0;
+
+                                                    if ($distance > 0) {
+                                                        echo $distance . ' km';
+                                                    } else {
+                                                        echo '-';
+                                                    }
+                                                }
+                                                ?>
                                             </span>
                                         </div>
                                     </div>
+
                                     <div class="div row mb-2">
                                         <div class="col">
                                             <span class="d-block text-uppercase text-xs fw-semibold" style="color: black;">Převýšení</span>
                                             <span class="text-success-emphasis fw-medium" style="color: black;">
                                                 <?php
-                                                // 1. Zkusíme vzít hodnotu přímo z řádku závodu
                                                 if (isset($row->total_elevation) && $row->total_elevation > 0) {
                                                     echo $row->total_elevation . ' m';
                                                 } else {
-                                                    // 2. Záložní výpočet sumy z etap, pokud v hlavním sloupci nic není
                                                     $stageModel = new \App\Models\Stage();
                                                     $elevationData = $stageModel->join('race_year', 'stage.id_race_year = race_year.id')
                                                         ->join('race', 'race.id = race_year.id_race')
                                                         ->where('race_year.id', $row->id)
-                                                        ->where('race_year.year', $year) // Pozor: ujisti se, že proměnná $year je v cyklu dostupná a správná
+                                                        ->where('race_year.year', $year)
                                                         ->selectSum('vertical_meters', 'elevation')
                                                         ->get()
                                                         ->getRow();
 
                                                     $elevation = $elevationData ? $elevationData->elevation : 0;
 
-                                                    // 3. Pokud je suma z etap větší než 0, vypíšeme ji, jinak dáme pomlčku
                                                     if ($elevation > 0) {
                                                         echo $elevation . ' m';
                                                     } else {
-                                                        echo '-'; // Nebo '0 m', podle toho, co preferuješ
+                                                        echo '-';
                                                     }
                                                 }
                                                 ?>
@@ -177,14 +192,32 @@
                                 <div class="row">
                                     <div class="col-6">
                                         <div class="form-floating mb-3">
-                                            <input type="number" step="0.1" name="total_distance" id="distance_add" class="form-control" placeholder="Délka (km)" required>
-                                            <label for="distance_add">Délka (km):</label>
+                                            <input type="date" name="start_date" id="start_date_add" class="form-control" value="<?= $year . date('-m-d') ?>" required>
+                                            <label for="start_date_add">Datum začátku:</label>
                                         </div>
                                     </div>
                                     <div class="col-6">
                                         <div class="form-floating mb-3">
-                                            <input type="number" name="total_elevation" id="elevation_add" class="form-control" placeholder="Převýšení (m)" required>
-                                            <label for="elevation_add">Převýšení (m):</label>
+                                            <input type="date" name="end_date" id="end_date_add" class="form-control" value="<?= $year . date('-m-d') ?>" required>
+                                            <label for="end_date_add">Datum konce:</label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-6">
+                                        <div class="form-floating mb-3">
+                                            <input type="text" name="country" id="country_add" class="form-control" placeholder="Např. CZ" maxlength="3" required>
+                                            <label for="country_add">Stát (zkratka např. CZ):</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="form-floating mb-3">
+                                            <select name="sex" id="sex_add" class="form-select" required>
+                                                <option value="M" selected>Muži (M)</option>
+                                                <option value="W">Ženy (W)</option>
+                                            </select>
+                                            <label for="sex_add">Kategorie (Pohlaví):</label>
                                         </div>
                                     </div>
                                 </div>
@@ -199,23 +232,23 @@
                                 </div>
 
                                 <div class="form-floating mb-3">
-                                    <select name="id_uci_tour" id="uci_tour_add" class="form-select">
+                                    <select name="uci_tour" id="uci_tour_edit" class="form-select">
                                         <?php foreach ($uci_moznosti as $key => $value): ?>
-                                            <option value="<?= $key ?>" <?= ($key == '0') ? 'selected' : '' ?>><?= $value ?></option>
+                                            <option value="<?= $key ?>"><?= $value ?></option>
                                         <?php endforeach; ?>
                                     </select>
-                                    <label for="uci_tour_add">UCI Tour:</label>
+                                    <label for="uci_tour_edit">UCI Tour:</label>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="bio_add" class="form-label text-muted small ps-2">Bio závodu (popis):</label>
+                                    <textarea name="description" id="bio_add" class="form-control" placeholder="Popis závodu..."></textarea>
                                 </div>
 
                                 <div class="mb-3">
                                     <label for="logo_add" class="form-label fw-semibold text-xs text-uppercase">Logo závodu:</label>
                                     <input type="file" name="logo" id="logo_add" class="form-control" required>
                                     <small class="text-muted d-block mt-1">Povolené formáty: jpg, png (max 2MB)</small>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="bio_add" class="form-label fw-semibold text-xs text-uppercase">Informace o závodu (Bio):</label>
-                                    <textarea name="bio" id="bio_add" class="form-control"></textarea>
                                 </div>
 
                                 <div class="modal-footer px-0 pb-0 mt-3">
@@ -237,7 +270,14 @@
                                         $zavody_pro_vyhledani = isset($vsechny_zavody) ? $vsechny_zavody : $zavody;
                                         foreach ($zavody_pro_vyhledani as $row):
                                         ?>
-                                            <option data-id="<?= $row->id ?>" data-uci="<?= $row->uci_tour ?? '0' ?>" data-bio="<?= esc($row->bio ?? '') ?>" value="<?= esc($row->real_name) ?>"></option>
+                                            <option data-id="<?= $row->id ?>"
+                                                data-uci="<?= $row->id_uci_tour ?? $row->uci_tour ?? '0' ?>"
+                                                data-bio="<?= $row->bio ?? '' ?>"
+                                                data-distance="<?= $row->total_distance ?? '0' ?>"
+                                                data-elevation="<?= $row->total_elevation ?? '0' ?>"
+                                                data-start="<?= !empty($row->start_date) && $row->start_date !== '0000-00-00' ? $row->start_date : '' ?>"
+                                                data-end="<?= !empty($row->end_date) && $row->end_date !== '0000-00-00' ? $row->end_date : '' ?>"
+                                                value="<?= $row->real_name ?>"></option>
                                         <?php endforeach; ?>
                                     </datalist>
                                 </div>
@@ -250,6 +290,36 @@
                                     <div class="form-floating mb-3">
                                         <input type="text" name="nazev" id="nazev_edit" class="form-control" placeholder="Název závodu">
                                         <label for="nazev_edit">Název závodu:</label>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <div class="form-floating mb-3">
+                                                <input type="date" name="start_date" id="start_date_edit" class="form-control" value="<?= $year . date('-m-d') ?>" required>
+                                                <label for="start_date_edit">Datum začátku:</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="form-floating mb-3">
+                                                <input type="date" name="end_date" id="end_date_edit" class="form-control" value="<?= $year . date('-m-d') ?>" required>
+                                                <label for="end_date_edit">Datum konce:</label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <div class="form-floating mb-3">
+                                                <input type="number" step="0.1" name="total_distance" id="distance_edit" class="form-control" placeholder="Délka (km)">
+                                                <label for="distance_edit">Délka (km):</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="form-floating mb-3">
+                                                <input type="number" name="total_elevation" id="elevation_edit" class="form-control" placeholder="Převýšení (m)">
+                                                <label for="elevation_edit">Převýšení (m):</label>
+                                            </div>
+                                        </div>
                                     </div>
 
                                     <div class="form-floating mb-3">
@@ -290,7 +360,7 @@
 
                                     <datalist id="zavody_datalist_delete">
                                         <?php foreach ($zavody_pro_vyhledani as $row): ?>
-                                            <option data-id="<?= $row->id ?>" value="<?= esc($row->real_name) ?>"></option>
+                                            <option data-id="<?= $row->id ?>" value="<?= $row->real_name ?>"></option>
                                         <?php endforeach; ?>
                                     </datalist>
                                 </div>
@@ -318,6 +388,24 @@
     <script>
         document.addEventListener("DOMContentLoaded", function() {
 
+            // --- AUTOMATICKÝ TERMÍN PODLE ROKU (PRO PŘIDÁNÍ) ---
+            const rokSelect = document.getElementById('rok_add');
+            const startDateInput = document.getElementById('start_date_add');
+            const endDateInput = document.getElementById('end_date_add');
+
+            if (rokSelect && startDateInput && endDateInput) {
+                rokSelect.addEventListener('change', function() {
+                    const vybranyRok = this.value;
+                    const dnes = new Date();
+                    const mesic = String(dnes.getMonth() + 1).padStart(2, '0');
+                    const den = String(dnes.getDate()).padStart(2, '0');
+                    const noveDatum = `${vybranyRok}-${mesic}-${den}`;
+
+                    startDateInput.value = noveDatum;
+                    endDateInput.value = noveDatum;
+                });
+            }
+
             // --- NAŠEPTÁVAČ PRO EDITACI ---
             const searchInput = document.getElementById('zavod_search_input');
             const datalist = document.getElementById('zavody_datalist');
@@ -339,12 +427,20 @@
                     let foundId = null;
                     let foundUci = '0';
                     let foundBio = '';
+                    let foundDistance = '0';
+                    let foundElevation = '0';
+                    let foundStart = '';
+                    let foundEnd = '';
 
                     options.forEach(option => {
                         if (option.value === inputValue) {
                             foundId = option.getAttribute('data-id');
                             foundUci = option.getAttribute('data-uci') || '0';
                             foundBio = option.getAttribute('data-bio') || '';
+                            foundDistance = option.getAttribute('data-distance') || '0';
+                            foundElevation = option.getAttribute('data-elevation') || '0';
+                            foundStart = option.getAttribute('data-start') || '';
+                            foundEnd = option.getAttribute('data-end') || '';
                         }
                     });
 
@@ -352,16 +448,25 @@
                         hiddenIdInput.value = foundId;
                         editNazevField.value = inputValue;
                         document.getElementById('uci_tour_edit').value = foundUci;
+                        document.getElementById('distance_edit').value = foundDistance;
+                        document.getElementById('elevation_edit').value = foundElevation;
+
+                        // Propisování datumu do editačních kalendářů
+                        // Pokud v DB datum chybí, předvyplní se dnešní den s aktuálním rokem stránky
+                        document.getElementById('start_date_edit').value = foundStart ? foundStart : "<?= $year . date('-m-d') ?>";
+                        document.getElementById('end_date_edit').value = foundEnd ? foundEnd : "<?= $year . date('-m-d') ?>";
 
                         // Propisování obsahu do TinyMCE pro editaci
                         if (tinymce.get('bio_edit')) {
                             tinymce.get('bio_edit').setContent(foundBio);
-                            tinymce.get('bio_edit').mode.set('design'); // odblokování editoru
+                            tinymce.get('bio_edit').mode.set('design');
                         }
 
                         document.getElementById('nazev_edit').removeAttribute('disabled');
                         document.getElementById('uci_tour_edit').removeAttribute('disabled');
                         document.getElementById('logo_edit').removeAttribute('disabled');
+                        document.getElementById('start_date_edit').removeAttribute('disabled');
+                        document.getElementById('end_date_edit').removeAttribute('disabled');
 
                         editWrapper.classList.remove('d-none');
                     } else {
@@ -369,8 +474,9 @@
                         document.getElementById('nazev_edit').setAttribute('disabled', 'disabled');
                         document.getElementById('uci_tour_edit').setAttribute('disabled', 'disabled');
                         document.getElementById('logo_edit').setAttribute('disabled', 'disabled');
+                        document.getElementById('start_date_edit').setAttribute('disabled', 'disabled');
+                        document.getElementById('end_date_edit').setAttribute('disabled', 'disabled');
 
-                        // Vyčištění a zablokování TinyMCE, pokud není vybráno nic
                         if (tinymce.get('bio_edit')) {
                             tinymce.get('bio_edit').setContent('');
                             tinymce.get('bio_edit').mode.set('readonly');
@@ -444,8 +550,7 @@
                     </div>
                 </div>
             </div>
-        </div>
-        `;
+        </div>`;
 
                     const pridatModalEl = document.getElementById('pridat');
                     if (pridatModalEl) {
@@ -457,12 +562,11 @@
                 });
             }
 
-            // --- INICIALIZACE TINYMCE PO OTEVŘENÍ MODALU (PRO ADD I EDIT) ---
+            // --- INICIALIZACE TINYMCE PO OTEVŘENÍ MODALU ---
             const pridatModal = document.getElementById('pridat');
 
             if (pridatModal) {
                 pridatModal.addEventListener('shown.bs.modal', function() {
-                    // Společná konfigurace pro TinyMCE
                     const tinyConfig = {
                         height: 250,
                         menubar: false,
@@ -472,15 +576,12 @@
                         license_key: 'gpl'
                     };
 
-                    // Inicializace pro přidání
                     if (!tinymce.get('bio_add')) {
                         tinymce.init({
                             ...tinyConfig,
                             selector: '#bio_add'
                         });
                     }
-
-                    // Inicializace pro editaci
                     if (!tinymce.get('bio_edit')) {
                         tinymce.init({
                             ...tinyConfig,

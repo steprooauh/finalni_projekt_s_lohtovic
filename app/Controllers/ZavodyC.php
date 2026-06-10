@@ -77,40 +77,36 @@ class ZavodyC extends BaseController
     public function add()
     {
         if ($this->request->is('post')) {
-            // 1. Validace dat z formuláře
             $rules = [
-                'nazev'           => 'required|min_length[3]|max_length[255]',
-                'rok'             => 'required|numeric',
-                'id_uci_tour'     => 'required|numeric',
-                'total_distance'  => 'required|numeric',
-                'total_elevation' => 'required|numeric',
-                'logo'            => 'uploaded[logo]|max_size[logo,2048]|ext_in[logo,jpg,jpeg,png]',
-                'bio'             => 'permit_empty',
+                'nazev'       => 'required|min_length[3]|max_length[255]',
+                'rok'         => 'required|numeric',
+                'id_uci_tour' => 'required|numeric',
+                'start_date'  => 'required|valid_date[Y-m-d]',
+                'end_date'    => 'required|valid_date[Y-m-d]',
+                'country'     => 'required|max_length[3]', // Validace pro stát
+                'sex'         => 'required|in_list[M,W]',  // Validace pro pohlaví
+                'logo'        => 'uploaded[logo]|max_size[logo,2048]|ext_in[logo,jpg,jpeg,png]'
             ];
 
             if (! $this->validate($rules)) {
                 return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
             }
 
-            // Nastavení dnešního data, aby sloupec v DB nebyl prázdný
-            $today = date('Y-m-d');
-
-            // 2. Příprava dat – VŠECHNO UKLÁDÁME DO RACE_YEAR
             $insertData = [
                 'real_name'            => $this->request->getPost('nazev'),
                 'year'                 => $this->request->getPost('rok'),
-                'id_uci_tour'          => $this->request->getPost('id_uci_tour'), // případně 'uci_tour' podle tvé DB
-                'bio'                  => $this->request->getPost('bio'),
-                'start_date'           => $today, // Zápis reálného data vyřeší chybu "30.11.-0001"
-                'end_date'             => $today,
+                'uci_tour'             => $this->request->getPost('id_uci_tour'),
+                'start_date'           => $this->request->getPost('start_date'),
+                'end_date'             => $this->request->getPost('end_date'),
+                'country'              => strtolower($this->request->getPost('country')), 
+                'sex'                  => $this->request->getPost('sex'),                
+                'description'          => $this->request->getPost('description'),         
                 'logo'                 => '',
                 'vytvoril_uzivatel_id' => 1,
-                // Tady ukládáme kilometry a převýšení přímo do hlavního záznamu závodu:
-                'total_distance'       => $this->request->getPost('total_distance'),
-                'total_elevation'      => $this->request->getPost('total_elevation')
+                'total_distance'       => 0,
+                'total_elevation'      => 0
             ];
 
-            // Zpracování nahrávání loga
             $img = $this->request->getFile('logo');
             if ($img && $img->isValid() && ! $img->hasMoved()) {
                 $extension = $img->getClientExtension();
@@ -122,10 +118,9 @@ class ZavodyC extends BaseController
                 }
             }
 
-            // 3. Vložení do tabulky race_year (bez volání $this->Stage)
             if ($this->raceYear->insert($insertData)) {
                 $rok = $this->request->getPost('rok');
-                return redirect()->to(base_url("index.php/roky/{$rok}"))->with('success', 'Závod byl úspěšně přidán.');
+                return redirect()->to(base_url("index.php/roky/{$rok}"))->with('success', 'Závod byl úspěšně založen. Upravte si podrobnosti ještě v editovat');
             } else {
                 return redirect()->back()->withInput()->with('error', 'Nepodařilo se uložit závod.');
             }
@@ -152,9 +147,13 @@ class ZavodyC extends BaseController
         }
 
         $updateData = [
-            'real_name'   => $this->request->getPost('nazev'),
-            'id_uci_tour' => $this->request->getPost('uci_tour'),
-            'bio'         => $this->request->getPost('bio'),
+            'real_name'       => $this->request->getPost('nazev'),
+            'uci_tour'        => $this->request->getPost('uci_tour'),
+            'description'     => $this->request->getPost('bio'),
+            'total_distance'  => $this->request->getPost('total_distance'),
+            'total_elevation' => $this->request->getPost('total_elevation'),
+            'start_date'      => $this->request->getPost('start_date'), // UPDATE DATA V DB
+            'end_date'        => $this->request->getPost('end_date'),   // UPDATE DATA V DB
         ];
 
         $file = $this->request->getFile('logo');
@@ -182,7 +181,7 @@ class ZavodyC extends BaseController
         }
 
         if ($this->raceYear->update($id, $updateData)) {
-            return redirect()->back()->with('success', 'Závod byl úspěšně upraven.');
+            return redirect()->back()->with('success', 'Závod byl úspěšně aktualizován.');
         }
 
         return redirect()->back()->with('error', 'Chyba při ukládání dat.');

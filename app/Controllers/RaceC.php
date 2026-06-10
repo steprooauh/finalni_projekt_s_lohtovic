@@ -18,6 +18,7 @@ class RaceC extends BaseController
     protected $race;
     protected $Config;
     public $rokZavodu;
+    public $stageModel;
 
     #[Override]
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
@@ -26,34 +27,52 @@ class RaceC extends BaseController
         $this->raceYear = new RaceYear();
         $this->race = new Race();
         $this->Config = new Config();
+        $this->stageModel = new Stage();
     }
 
     public function show($idZavod)
     {
-        // Načteme pouze jeden konkrétní závod podle ID
         $raceYearRow = $this->raceYear->find($idZavod);
-
-        if (!$raceYearRow) {
-            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound("Závod s ID $idZavod nebyl nalezen.");
-        }
 
         $rok = is_object($raceYearRow) ? $raceYearRow->year : $raceYearRow['year'];
         $id = is_object($raceYearRow) ? $raceYearRow->id : $raceYearRow['id'];
 
-        // VÝPOČET DAT PRO JEDEN ZÁVOD
-        $stageModel = new Stage();
 
-        // Spočítáme sumu vzdáleností
-        $distanceResult = $stageModel->where('id_race_year', $id)->selectSum('distance')->get()->getRow();
-        $raceYearRow->total_distance = $distanceResult ? $distanceResult->distance : 0;
+        if (empty($raceYearRow->total_distance) || $raceYearRow->total_distance == 0) {
+            $distanceResult = $this->stageModel->where('id_race_year', $id)->selectSum('distance')->get()->getRow();
+            $raceYearRow->total_distance = $distanceResult ? ($distanceResult->distance ?? 0) : 0;
+        }
 
-        // Spočítáme sumu převýšení
-        $elevationResult = $stageModel->where('id_race_year', $id)->selectSum('vertical_meters', 'elevation')->get()->getRow();
-        $raceYearRow->total_elevation = $elevationResult ? $elevationResult->elevation : 0;
+        if (empty($raceYearRow->total_elevation) || $raceYearRow->total_elevation == 0) {
+            $elevationResult = $this->stageModel->where('id_race_year', $id)->selectSum('vertical_meters', 'elevation')->get()->getRow();
+            $raceYearRow->total_elevation = $elevationResult ? ($elevationResult->elevation ?? 0) : 0;
+        }
+
+        $uci_moznosti = [
+            '0'  => 'Není v UCI',
+            '1'  => 'UCI Worldtour',
+            '2'  => 'UCI World Championships',
+            '3'  => 'Africa Tour',
+            '4'  => 'Asia Tour',
+            '5'  => 'Europe Tour',
+            '6'  => 'Men Junior',
+            '7'  => 'Women Elite',
+            '8'  => 'Women Junior',
+            '9'  => 'America Tour',
+            '10' => 'Nations Cup',
+            '11' => 'National Championship',
+            '12' => 'WWT',
+            '13' => 'UCI Pro Series',
+            '14' => 'Oceania Tour'
+        ];
+
+        $uci_klic = is_object($raceYearRow) ? $raceYearRow->uci_tour : $raceYearRow['uci_tour'];
+
+        $raceYearRow->uci_tour_text = $uci_moznosti[$uci_klic] ?? 'Neznámo';
 
         $data = [
             'idZavod' => $idZavod,
-            'zavod'   => $raceYearRow, // Předáváme jako hlavní objekt
+            'zavod'   => $raceYearRow,
             'year'    => $rok
         ];
 
