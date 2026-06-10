@@ -36,17 +36,10 @@ class ZavodyC extends BaseController
     public function index($year)
     {
         $jenMoje = $this->request->getGet('moje') === '1';
-
         $this->rokZavodu = $year;
 
         $builder = $this->raceYear->where('year', $year);
 
-        $stage = $this->Stage->join('race_year', 'stage.id_race_year = race_year.id')
-            ->join('race', 'race.id = race_year.id_race')
-            ->where('race_year.year', $year)
-            ->findAll();
-
-        // OPRAVA FILTRU: Pokud je zaškrtnuto "Moje", filtrujeme hodnotu 1 v DB
         if ($jenMoje) {
             $builder->where('vytvoril_uzivatel_id', 1);
         }
@@ -70,7 +63,6 @@ class ZavodyC extends BaseController
         ];
 
         $data = [
-            'stage'          => $stage,
             'year'           => $year,
             'zavody'         => $builder->paginate($this->Config->strankovani),
             'vsechny_zavody' => $this->raceYear->where('year', $year)->findAll(),
@@ -85,8 +77,7 @@ class ZavodyC extends BaseController
     public function add()
     {
         if ($this->request->is('post')) {
-
-            // 1. Validace
+            // 1. Validace dat z formuláře
             $rules = [
                 'nazev'           => 'required|min_length[3]|max_length[255]',
                 'rok'             => 'required|numeric',
@@ -101,22 +92,25 @@ class ZavodyC extends BaseController
                 return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
             }
 
-            // Dnešní datum jako výchozí pro start i konec, aby v DB nebylo prázdno
+            // Nastavení dnešního data, aby sloupec v DB nebyl prázdný
             $today = date('Y-m-d');
 
-            // 2. Příprava dat pro tabulku ROČNÍKU ZÁVODU (race_year)
+            // 2. Příprava dat – VŠECHNO UKLÁDÁME DO RACE_YEAR
             $insertData = [
                 'real_name'            => $this->request->getPost('nazev'),
                 'year'                 => $this->request->getPost('rok'),
-                'uci_tour'             => $this->request->getPost('id_uci_tour'),
+                'id_uci_tour'          => $this->request->getPost('id_uci_tour'), // případně 'uci_tour' podle tvé DB
                 'bio'                  => $this->request->getPost('bio'),
-                'start_date'           => $today, // OPRAVA: Nastavíme datum
-                'end_date'             => $today,   // OPRAVA: Nastavíme datum
+                'start_date'           => $today, // Zápis reálného data vyřeší chybu "30.11.-0001"
+                'end_date'             => $today,
                 'logo'                 => '',
                 'vytvoril_uzivatel_id' => 1,
+                // Tady ukládáme kilometry a převýšení přímo do hlavního záznamu závodu:
+                'total_distance'       => $this->request->getPost('total_distance'),
+                'total_elevation'      => $this->request->getPost('total_elevation')
             ];
 
-            // Zpracování loga
+            // Zpracování nahrávání loga
             $img = $this->request->getFile('logo');
             if ($img && $img->isValid() && ! $img->hasMoved()) {
                 $extension = $img->getClientExtension();
@@ -128,25 +122,10 @@ class ZavodyC extends BaseController
                 }
             }
 
-            // 3. Vložení ročníku do DB
+            // 3. Vložení do tabulky race_year (bez volání $this->Stage)
             if ($this->raceYear->insert($insertData)) {
-                $newRaceYearId = $this->raceYear->getInsertID();
-
-                // 4. OPRAVA KILOMETRŮ A PŘEVÝŠENÍ:
-                // Protože tvůj web sčítá kilometry z etap, musíme zadané hodnoty uložit jako první etapu.
-                $stageData = [
-                    'id_race_year'    => $newRaceYearId,
-                    'distance'        => $this->request->getPost('total_distance'),
-                    'vertical_meters' => $this->request->getPost('total_elevation'),
-                    // Pokud má tabulka stage další povinná pole (např. nazev_etapy), přidej je sem:
-                    // 'name' => '1. etapa', 
-                ];
-
-                $this->Stage->insert($stageData);
-
-
                 $rok = $this->request->getPost('rok');
-                return redirect()->to(base_url("index.php/roky/{$rok}"))->with('success', 'Závod byl úspěšně přidán včetně etapy.');
+                return redirect()->to(base_url("index.php/roky/{$rok}"))->with('success', 'Závod byl úspěšně přidán.');
             } else {
                 return redirect()->back()->withInput()->with('error', 'Nepodařilo se uložit závod.');
             }
@@ -161,7 +140,7 @@ class ZavodyC extends BaseController
             return redirect()->back()->with('error', 'Neoprávněný přístup.');
         }
 
-        $id = $this->request->getPost('id');
+        $id = $this->request->getPost('zavod_id') ?? $this->request->getPost('id');
 
         if (empty($id)) {
             return redirect()->back()->with('error', 'Nebyl vybrán žádný závod k úpravě.');
@@ -175,11 +154,11 @@ class ZavodyC extends BaseController
         $updateData = [
             'real_name'   => $this->request->getPost('nazev'),
             'id_uci_tour' => $this->request->getPost('uci_tour'),
+            'bio'         => $this->request->getPost('bio'),
         ];
 
         $file = $this->request->getFile('logo');
 
-        // Opravená podmínka a validace pro nahrávání souborů v CI4
         if ($file && $file->isValid() && !$file->hasMoved()) {
             $rules = [
                 'logo' => 'max_size[logo,2048]|ext_in[logo,jpg,jpeg,png]'
@@ -203,7 +182,7 @@ class ZavodyC extends BaseController
         }
 
         if ($this->raceYear->update($id, $updateData)) {
-            return redirect()->back()->with('success', 'Závod a logo byly úspěšně upraveny.');
+            return redirect()->back()->with('success', 'Závod byl úspěšně upraven.');
         }
 
         return redirect()->back()->with('error', 'Chyba při ukládání dat.');
@@ -215,7 +194,6 @@ class ZavodyC extends BaseController
             return redirect()->back()->with('error', 'Neoprávněný přístup.');
         }
 
-        // OPRAVA: Změněno z 'id' na 'zavod_id'
         $id = $this->request->getPost('id');
 
         if (empty($id)) {

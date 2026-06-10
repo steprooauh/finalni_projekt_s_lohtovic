@@ -12,7 +12,7 @@ class Stage extends Model
     protected $returnType       = 'object';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
-    protected $allowedFields    = [];
+    protected $allowedFields    = ['id_race_year', ''];
 
     protected bool $allowEmptyInserts = false;
     protected bool $updateOnlyChanged = true;

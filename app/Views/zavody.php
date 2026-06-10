@@ -237,7 +237,7 @@
                                         $zavody_pro_vyhledani = isset($vsechny_zavody) ? $vsechny_zavody : $zavody;
                                         foreach ($zavody_pro_vyhledani as $row):
                                         ?>
-                                            <option data-id="<?= $row->id ?>" value="<?= esc($row->real_name) ?>"></option>
+                                            <option data-id="<?= $row->id ?>" data-uci="<?= $row->uci_tour ?? '0' ?>" data-bio="<?= esc($row->bio ?? '') ?>" value="<?= esc($row->real_name) ?>"></option>
                                         <?php endforeach; ?>
                                     </datalist>
                                 </div>
@@ -333,11 +333,13 @@
                     const options = datalist.querySelectorAll('option');
                     let foundId = null;
                     let foundUci = '0';
+                    let foundBio = '';
 
                     options.forEach(option => {
                         if (option.value === inputValue) {
                             foundId = option.getAttribute('data-id');
                             foundUci = option.getAttribute('data-uci') || '0';
+                            foundBio = option.getAttribute('data-bio') || '';
                         }
                     });
 
@@ -345,6 +347,12 @@
                         hiddenIdInput.value = foundId;
                         editNazevField.value = inputValue;
                         document.getElementById('uci_tour_edit').value = foundUci;
+
+                        // Propisování obsahu do TinyMCE pro editaci
+                        if (tinymce.get('bio_edit')) {
+                            tinymce.get('bio_edit').setContent(foundBio);
+                            tinymce.get('bio_edit').mode.set('design'); // odblokování editoru
+                        }
 
                         document.getElementById('nazev_edit').removeAttribute('disabled');
                         document.getElementById('uci_tour_edit').removeAttribute('disabled');
@@ -357,17 +365,23 @@
                         document.getElementById('uci_tour_edit').setAttribute('disabled', 'disabled');
                         document.getElementById('logo_edit').setAttribute('disabled', 'disabled');
 
+                        // Vyčištění a zablokování TinyMCE, pokud není vybráno nic
+                        if (tinymce.get('bio_edit')) {
+                            tinymce.get('bio_edit').setContent('');
+                            tinymce.get('bio_edit').mode.set('readonly');
+                        }
+
                         editWrapper.classList.add('d-none');
                     }
                 });
             }
 
-            // --- NAŠEPTÁVAČ PRO MAZÁNÍ (OPRAVENÝ A SREDUKOVANÝ) ---
+            // --- NAŠEPTÁVAČ PRO MAZÁNÍ ---
             const deleteInput = document.getElementById('zavod_delete_input');
             const deleteDatalist = document.getElementById('zavody_datalist_delete');
             const deleteTriggerBtn = document.getElementById('delete_trigger_btn');
             const deleteAlert = document.getElementById('delete_alert');
-            const hiddenDeleteInput = document.getElementById('zavod_delete_id'); // Skrytý input z view tabu
+            const hiddenDeleteInput = document.getElementById('zavod_delete_id');
 
             let targetDeleteId = null;
             let targetDeleteName = "";
@@ -398,65 +412,74 @@
                     }
                 });
 
-                // Akce po kliknutí na "Pokračovat k odstranění"
                 deleteTriggerBtn.addEventListener('click', function() {
                     if (!targetDeleteId) return;
 
                     const modalId = 'confirm_delete_modal';
-
-                    // OPRAVA ROUTY: Směřujeme na ZavodyC/delete, aby to controller chytil
                     const actionRoute = '<?= base_url("index.php/zavodyc/delete") ?>';
 
                     document.getElementById('delete_modal_container').innerHTML = `
-                <div class="modal fade" id="${modalId}" tabindex="-1" aria-hidden="true">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h4 class="modal-title">Potvrdit odstranění</h4>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zavřít"></button>
-                            </div>
-                            <div class="modal-body">
-                                Opravdu chcete závod <strong>${targetDeleteName}</strong> odebrat z přehledu? Data zůstanou archivována.
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zrušit</button>
-                                <form action="${actionRoute}" method="post">
-                                    <?= csrf_field() ?>
-                                    <input type="hidden" name="id" value="${targetDeleteId}">
-                                    <button type="submit" class="btn btn-warning text-dark">Odstranit z přehledu</button>
-                                </form>
-                            </div>
-                        </div>
+        <div class="modal fade" id="${modalId}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title">Potvrdit odstranění</h4>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zavřít"></button>
+                    </div>
+                    <div class="modal-body">
+                        Opravdu chcete závod <strong>${targetDeleteName}</strong> odebrat z přehledu? Data zůstanou archivována.
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zrušit</button>
+                        <form action="${actionRoute}" method="post">
+                            <?= csrf_field() ?>
+                            <input type="hidden" name="id" value="${targetDeleteId}">
+                            <button type="submit" class="btn btn-warning text-dark">Odstranit z přehledu</button>
+                        </form>
                     </div>
                 </div>
-                `;
+            </div>
+        </div>
+        `;
 
-                    // Zavřeme hlavní modal (předpokládá se, že se jmenuje 'pridat')
                     const pridatModalEl = document.getElementById('pridat');
                     if (pridatModalEl) {
                         const modalInstance = bootstrap.Modal.getInstance(pridatModalEl);
                         if (modalInstance) modalInstance.hide();
                     }
 
-                    // Otevřeme nově vygenerovaný potvrzovací modal
                     new bootstrap.Modal(document.getElementById(modalId)).show();
                 });
             }
 
-            // --- INICIALIZACE TINYMCE PO OTEVŘENÍ MODALU ---
+            // --- INICIALIZACE TINYMCE PO OTEVŘENÍ MODALU (PRO ADD I EDIT) ---
             const pridatModal = document.getElementById('pridat');
 
             if (pridatModal) {
                 pridatModal.addEventListener('shown.bs.modal', function() {
+                    // Společná konfigurace pro TinyMCE
+                    const tinyConfig = {
+                        height: 250,
+                        menubar: false,
+                        plugins: 'lists link image charmap preview anchor searchreplace visualblocks code fullscreen table wordcount',
+                        toolbar: 'undo redo | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat',
+                        language: 'cs',
+                        license_key: 'gpl'
+                    };
+
+                    // Inicializace pro přidání
                     if (!tinymce.get('bio_add')) {
                         tinymce.init({
-                            selector: '#bio_add',
-                            height: 250,
-                            menubar: false,
-                            plugins: 'lists link image charmap preview anchor searchreplace visualblocks code fullscreen table wordcount',
-                            toolbar: 'undo redo | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat',
-                            language: 'cs',
-                            license_key: 'gpl'
+                            ...tinyConfig,
+                            selector: '#bio_add'
+                        });
+                    }
+
+                    // Inicializace pro editaci
+                    if (!tinymce.get('bio_edit')) {
+                        tinymce.init({
+                            ...tinyConfig,
+                            selector: '#bio_edit'
                         });
                     }
                 });
