@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Závody</title>
-    <link rel="icon" type="image/x-icon" href="<?= base_url('img/stranka.webp') ?>">
+    <link rel="icon" type="image/x-icon" href="<?= base_url('app/stranka.png') ?>">
     <style>
         .disabled-div {
             pointer-events: none;

@@ -186,7 +186,7 @@
                             <form action="<?= base_url('index.php/zavody/pridat') ?>" method="post" enctype="multipart/form-data">
                                 <?= csrf_field() ?>
 
-                                <?php echo form_input_bs('nazev', ['id' => 'nazev_add', 'value' => ''], 'Název závodu:', 'text', true); ?>
+                                <?php echo form_input_bs('nazev', ['id' => 'nazev_add', 'value' => ''], 'Název závodu', 'text', true); ?>
                                 <input type="hidden" name="id_rocniku" id="id_rocniku_add" value="">
 
                                 <div class="row">
@@ -228,7 +228,7 @@
                                             <option value="<?= $i ?>" <?= ($i == $year) ? 'selected' : '' ?>><?= $i ?></option>
                                         <?php endfor; ?>
                                     </select>
-                                    <label for="rok_add">Rok závodu:</label>
+                                    <label for="rok_add">Rok závodu</label>
                                 </div>
 
                                 <div class="form-floating mb-3">
@@ -246,7 +246,7 @@
                                 </div>
 
                                 <div class="mb-3">
-                                    <label for="logo_add" class="form-label fw-semibold text-xs text-uppercase">Logo závodu:</label>
+                                    <label for="logo_add" class="form-label">Logo závodu</label>
                                     <input type="file" name="logo" id="logo_add" class="form-control" required>
                                     <small class="text-muted d-block mt-1">Povolené formáty: jpg, png (max 2MB)</small>
                                 </div>
@@ -289,7 +289,7 @@
                                     <hr>
                                     <div class="form-floating mb-3">
                                         <input type="text" name="nazev" id="nazev_edit" class="form-control" placeholder="Název závodu">
-                                        <label for="nazev_edit">Název závodu:</label>
+                                        <label for="nazev_edit">Název závodu</label>
                                     </div>
 
                                     <div class="row">
@@ -328,17 +328,12 @@
                                                 <option value="<?= $key ?>"><?= $value ?></option>
                                             <?php endforeach; ?>
                                         </select>
-                                        <label for="uci_tour_edit">UCI Tour:</label>
+                                        <label for="uci_tour_edit">UCI Tour</label>
                                     </div>
 
                                     <div class="mb-3">
-                                        <label for="bio_edit" class="form-label text-muted small ps-2">Bio závodu:</label>
-                                        <textarea name="bio" id="bio_edit" class="form-control" placeholder="Popis závodu..."></textarea>
-                                    </div>
-
-                                    <div class="form-floating mb-3">
-                                        <input type="file" name="logo" id="logo_edit" class="form-control" placeholder="Logo závodu">
-                                        <label for="logo_edit">Logo závodu:</label>
+                                        <label for="logo_add" class="form-label">Logo závodu</label>
+                                        <input type="file" name="logo" id="logo_edit" class="form-control">
                                         <small class="text-muted d-block mt-1">Povolené formáty: jpg, png (max 2MB)</small>
                                     </div>
 
